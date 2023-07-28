@@ -19,8 +19,12 @@ func createInlineStructFromJSON(data map[string]interface{}, structName string) 
 		case reflect.Map:
 			structCode += fmt.Sprintf("%s %s `json:\"%s\"`\n", strings.Title(key), createInlineStructFromJSON(value.(map[string]interface{}), ""), key)
 		case reflect.Slice:
-			t := reflect.TypeOf(value.([]interface{})[0]).String()
-			structCode += fmt.Sprintf("%s []%s `json:\"%s\"`\n", strings.Title(key), t, key)
+			if len(value.([]interface{})) == 0 {
+				structCode += fmt.Sprintf("%s []interface{} `json:\"%s\"`\n", strings.Title(key), key)
+			} else {
+				t := reflect.TypeOf(value.([]interface{})[0]).String()
+				structCode += fmt.Sprintf("%s []%s `json:\"%s\"`\n", strings.Title(key), t, key)
+			}
 		default:
 			structCode += fmt.Sprintf("%s %s `json:\"%s\"`\n", strings.Title(key), reflect.TypeOf(value).String(), key)
 		}

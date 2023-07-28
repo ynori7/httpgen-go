@@ -9,7 +9,6 @@ import (
 
 type structInfo struct {
 	types map[string]structDef //key is the struct name, value is the struct fields
-	order []string             //preserves the order of the structs
 }
 
 type structDef struct {
@@ -22,14 +21,22 @@ type structDef struct {
 func createStructsFromJSON(data map[string]interface{}, structName string) string {
 	structs := &structInfo{
 		types: make(map[string]structDef),
-		order: make([]string, 0),
 	}
 	buildStructInfo(data, structName, structs, "")
 
 	goCode := ""
-	for i := len(structs.order) - 1; i >= 0; i-- {
-		goCode += "type " + structs.order[i] + " struct {\n"
-		for _, line := range structs.types[structs.order[i]].fields {
+	order := make([]string, 0, len(structs.types))
+	for k := range structs.types {
+		if k != structName {
+			order = append(order, k)
+		}
+	}
+	sort.Strings(order)
+	order = append([]string{structName}, order...) //make sure the main struct we are creating is first
+
+	for i := range order {
+		goCode += "type " + order[i] + " struct {\n"
+		for _, line := range structs.types[order[i]].fields {
 			goCode += line + "\n"
 		}
 		goCode += "}\n\n"
@@ -83,7 +90,6 @@ func buildStructInfo(data map[string]interface{}, structName string, structs *st
 			suffix: 0,
 			fields: typeDef,
 		}
-		structs.order = append(structs.order, strings.Title(structName))
 	} else if !reflect.DeepEqual(typeDef, structs.types[strings.Title(structName)].fields) {
 		// If the struct already exists, but the fields are different, create a new struct
 		i := 1
@@ -96,7 +102,6 @@ func buildStructInfo(data map[string]interface{}, structName string, structs *st
 					suffix: i,
 					fields: typeDef,
 				}
-				structs.order = append(structs.order, newName)
 				return newName
 			} else if !reflect.DeepEqual(typeDef, structs.types[newName].fields) {
 				// If the struct already exists, but the fields are different, try the next suffix
