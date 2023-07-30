@@ -26,32 +26,32 @@ func TestCreateStructFromJSON_Inline(t *testing.T) {
 		},
 		{
 			name:     "nested",
-			jsonData: "{\"name\":\"John\",\"address\":{\"city\":\"San Francisco\"}}",
-			want:     "type Response struct {\nName string `json:\"name\"`\nAddress struct {\nCity string `json:\"city\"`\n} `json:\"address\"`\n}\n",
+			jsonData: "{\"name\":\"John\",\"address\":{\"street\":\"Easy St. 1\",\"city\":\"San Francisco\"}}",
+			want:     "type Response struct {\nAddress struct {\nCity string `json:\"city\"`\nStreet string `json:\"street\"`\n} `json:\"address\"`\nName string `json:\"name\"`\n}\n",
 			wantErr:  false,
 		},
 		{
 			name:     "array of structs",
 			jsonData: "{\"name\":\"John\",\"addresses\":[{\"city\":\"San Francisco\"},{\"city\":\"New York\"}]}",
-			want:     "type Response struct {\nName string `json:\"name\"`\nAddresses []map[string]interface{} `json:\"addresses\"`\n}\n", //TODO: improve this
+			want:     "type Response struct {\nAddresses []struct{\nCity string `json:\"city\"`} `json:\"addresses\"`\nName string `json:\"name\"`\n}\n", 
 			wantErr:  false,
 		},
 		{
 			name:     "array of strings",
 			jsonData: "{\"name\":\"John\",\"addresses\":[\"San Francisco\",\"New York\"]}",
-			want:     "type Response struct {\nName string `json:\"name\"`\nAddresses []string `json:\"addresses\"`\n}\n",
+			want:     "type Response struct {\nAddresses []string `json:\"addresses\"`\nName string `json:\"name\"`\n}\n",
 			wantErr:  false,
 		},
 		{
 			name:     "duplicate structs",
 			jsonData: "{\"name\":\"John\",\"start\":{\"address\": {\"city\":\"San Francisco\"}},\"end\":{\"address\": {\"city\":\"New York\"}}} ",
-			want:     "type Response struct {\nName string `json:\"name\"`\nStart struct {\nAddress struct {\nCity string `json:\"city\"`\n} `json:\"address\"`\n} `json:\"start\"`\nEnd struct {\nAddress struct {\nCity string `json:\"city\"`\n} `json:\"address\"`\n} `json:\"end\"`\n}\n",
+			want:     "type Response struct {\nEnd struct {\nAddress struct {\nCity string `json:\"city\"`\n} `json:\"address\"`\n} `json:\"end\"`\nName string `json:\"name\"`\nStart struct {\nAddress struct {\nCity string `json:\"city\"`\n} `json:\"address\"`\n} `json:\"start\"`\n}\n",
 			wantErr:  false,
 		},
 		{
 			name:     "empty array",
 			jsonData: "{\"name\":\"John\",\"addresses\":[]}",
-			want:     "type Response struct {\nName string `json:\"name\"`\nAddresses []interface{} `json:\"addresses\"`\n}\n",
+			want:     "type Response struct {\nAddresses []interface{} `json:\"addresses\"`\nName string `json:\"name\"`\n}\n",
 			wantErr:  false,
 		},
 		{

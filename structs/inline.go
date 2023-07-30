@@ -3,6 +3,7 @@ package structs
 import (
 	"fmt"
 	"reflect"
+	"sort"
 	"strings"
 )
 
@@ -14,7 +15,16 @@ func createInlineStructFromJSON(data map[string]interface{}, structName string) 
 	} else {
 		structCode = " struct {\n"
 	}
-	for key, value := range data {
+
+	order := make([]string, 0, len(data))
+	for key := range data {
+		order = append(order, key)
+	}
+
+	sort.Strings(order)
+
+	for _, key := range order {
+		value := data[key]
 		switch reflect.TypeOf(value).Kind() {
 		case reflect.Map:
 			structCode += fmt.Sprintf("%s %s `json:\"%s\"`\n", strings.Title(key), createInlineStructFromJSON(value.(map[string]interface{}), ""), key)
@@ -22,8 +32,13 @@ func createInlineStructFromJSON(data map[string]interface{}, structName string) 
 			if len(value.([]interface{})) == 0 {
 				structCode += fmt.Sprintf("%s []interface{} `json:\"%s\"`\n", strings.Title(key), key)
 			} else {
-				t := reflect.TypeOf(value.([]interface{})[0]).String()
-				structCode += fmt.Sprintf("%s []%s `json:\"%s\"`\n", strings.Title(key), t, key)
+				t := reflect.TypeOf(value.([]interface{})[0])
+				switch t.Kind() {
+				case reflect.Map:
+					structCode += fmt.Sprintf("%s []%s `json:\"%s\"`\n", strings.Title(key), createInlineStructFromJSON(value.([]interface{})[0].(map[string]interface{}), ""), key)
+				default:
+					structCode += fmt.Sprintf("%s []%s `json:\"%s\"`\n", strings.Title(key), t.String(), key)
+				}
 			}
 		default:
 			structCode += fmt.Sprintf("%s %s `json:\"%s\"`\n", strings.Title(key), reflect.TypeOf(value).String(), key)

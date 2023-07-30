@@ -66,7 +66,7 @@ func buildStructInfo(data map[string]interface{}, structName string, structs *st
 					name := buildStructInfo(value.([]interface{})[0].(map[string]interface{}), strings.Title(key), structs, structName)
 					t = "[]" + name
 				default:
-					t = fmt.Sprintf("[]%s", reflect.TypeOf(value.([]interface{})[0]).String())
+					t = fmt.Sprintf("[]%s", tRaw.String())
 				}
 			}
 			line := fmt.Sprintf("%s %s `json:\"%s\"`", strings.Title(key), t, key)
