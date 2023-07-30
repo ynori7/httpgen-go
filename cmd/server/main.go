@@ -8,6 +8,7 @@ import (
 	"github.com/ynori7/httpgen-go/client"
 	"github.com/ynori7/httpgen-go/curl"
 	"github.com/ynori7/httpgen-go/generator"
+	"github.com/ynori7/httpgen-go/structs"
 )
 
 var httpClient = client.NewClient()
@@ -35,10 +36,15 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	</head>
 	<body>
 		<h1>Simple Curl Command</h1>
+		<p>Enter a curl command to generate a simple Go client or JSON payload to generate the models.</p>
 		<form method="post">
 			<label for="curlCommand">Curl Command:</label>
 			<br>
 			<textarea id="curlCommand" name="curlCommand" rows="5" cols="50"></textarea>
+			<br>
+			<label for="json">JSON Payload:</label>
+			<br>
+			<textarea id="json" name="json" rows="5" cols="50"></textarea>
 			<br>
 			<input type="checkbox" id="inline" name="inline">
 			<label for="inline">Inline</label>
@@ -46,8 +52,8 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 			<input type="submit" value="Submit">
 		</form>
 		<br>
-		<h2>Output:</h2>
-		<pre>{{.Output}}</pre>
+		{{ if .Output }}<h2>Output:</h2>
+		<pre>{{.Output}}</pre>{{ end }}
 	</body>
 	</html>
 	`
@@ -70,8 +76,20 @@ func getOutput(r *http.Request) (string, error) {
 	if r.Method == http.MethodPost {
 		// Get the form values
 		curlCommand := r.FormValue("curlCommand")
+		json := r.FormValue("json")
 		inline := r.FormValue("inline")
 		useInline := inline != ""
+
+		if curlCommand == "" && json == "" {
+			return "", fmt.Errorf("curl command or json payload must be provided")
+		}
+		if json != "" {
+			data, err := structs.CreateStructFromJSON(json, "Payload", useInline)
+			if err != nil {
+				return "", err
+			}
+			return data, nil
+		}
 
 		command, err := curl.Parse(curlCommand)
 		if err != nil {

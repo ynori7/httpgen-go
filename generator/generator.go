@@ -3,6 +3,7 @@ package generator
 import (
 	"bufio"
 	"bytes"
+	"go/format"
 	"text/template"
 
 	"github.com/ynori7/httpgen-go/curl"
@@ -33,18 +34,35 @@ func (h GoTemplate) ExecuteGoTemplate(useInlineStructs bool) (string, error) {
 		h.ResponseBody, _ = structs.CreateStructFromJSON(h.ResponseBody, "Response", useInlineStructs)
 	}
 
+	clientCode, err := h.GenerateClientCode()
+	if err != nil {
+		return "", err
+	}
+
 	t := template.Must(template.New("txt").Parse(goTemplate))
 
 	var b bytes.Buffer
 	w := bufio.NewWriter(&b)
 
-	err := t.Execute(w, h)
-	if err != nil {
+	if err = t.Execute(w, struct {
+		ClientCode   string
+		RequestBody  string
+		ResponseBody string
+	}{
+		ClientCode:   clientCode,
+		RequestBody:  h.RequestBody,
+		ResponseBody: h.ResponseBody,
+	}); err != nil {
 		return "", err
 	}
 
 	w.Flush()
-	return b.String(), nil
+
+	formattedCode, err := format.Source(b.Bytes())
+	if err != nil {
+		return b.String(), err
+	}
+	return string(formattedCode), nil
 }
 
 const goTemplate = `package main
@@ -52,35 +70,11 @@ const goTemplate = `package main
 import (
 	"bytes"
 	"fmt"
-	"net/http"{{ if .Command.HasBody }}
-	"strings"{{ end }}
+	"net/http"
 )
 
-func main() {
-	// Create the HTTP request{{ if .Command.HasBody }}
-	body := strings.NewReader({{ .Command.Body | printf "%q" }})
-{{ end }}
-	request, err := http.NewRequest({{ .Command.Method | printf "%q"}}, {{ .Command.URL | printf "%q" }}, {{ if not .Command.Body }}nil{{ else }}body{{ end }})
-	if err != nil {
-		panic(err)
-	}{{ range $k, $v := .Command.Headers }}
-	request.Header.Add({{ $k | printf "%q" }}, {{ $v | printf "%q" }}){{ end }}
-
-	// Perform the HTTP request
-	client := &http.Client{}
-	response, err := client.Do(request)
-	if err != nil {
-		panic(err)
-	}
-	defer response.Body.Close()
-
-	// Read the response body
-	responseBody := new(bytes.Buffer)
-	responseBody.ReadFrom(response.Body)
-
-	// Print the response status code and body
-	fmt.Println("Response Status Code:", response.Status)
-	fmt.Println("Response Body:", responseBody.String())
+func main() { {{ .ClientCode }}
+fmt.Println("Response Body:", responseBody.String())
 }{{ if .RequestBody }}
 
 // Request is model for the HTTP request body
