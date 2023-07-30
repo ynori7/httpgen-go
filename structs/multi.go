@@ -94,7 +94,7 @@ func buildStructInfo(data map[string]interface{}, structName string, structs *st
 		// If the struct already exists, but the fields are different, create a new struct
 		i := 1
 		for {
-			newName := fmt.Sprintf("%s%d", strings.Title(structName), i)
+			newName := getNameWithSuffix(strings.Title(structName), i)
 			// Check if the new struct already exists with this suffix
 			if _, ok := structs.types[newName]; !ok {
 				structs.types[newName] = structDef{
@@ -114,4 +114,15 @@ func buildStructInfo(data map[string]interface{}, structName string, structs *st
 	}
 
 	return structName
+}
+
+func getNameWithSuffix(name string, suffix interface{}) string {
+	switch suffix.(type) {
+	case string:
+		return name + suffix.(string)
+	case int, int32, int64:
+		return fmt.Sprintf("%s%d", name, suffix.(int))
+	default:
+		return name
+	}
 }

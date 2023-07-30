@@ -25,6 +25,12 @@ func TestCreateStructFromJSON_Inline(t *testing.T) {
 			wantErr:  false,
 		},
 		{
+			name:     "simple array",
+			jsonData: "[\"San Francisco\",\"New York\"]",
+			want:     "type Response struct {\nResponseItems []string `json:\"ResponseItems\"`}\n",
+			wantErr:  false,
+		},
+		{
 			name:     "nested",
 			jsonData: "{\"name\":\"John\",\"address\":{\"street\":\"Easy St. 1\",\"city\":\"San Francisco\"}}",
 			want:     "type Response struct {\nAddress struct {\nCity string `json:\"city\"`\nStreet string `json:\"street\"`\n} `json:\"address\"`\nName string `json:\"name\"`\n}\n",
@@ -93,6 +99,12 @@ func TestCreateStructFromJSON_Multi(t *testing.T) {
 			name:     "empty",
 			jsonData: "{}",
 			want:     "type Response struct {\n}\n\n",
+			wantErr:  false,
+		},
+		{
+			name:     "simple array",
+			jsonData: "[{\"name\":\"John\"},{\"name\":\"Jane\"}]",
+			want:     "type Response struct {\nResponseItems []ResponseItems `json:\"ResponseItems\"`\n}\n\ntype ResponseItems struct {\nName string `json:\"name\"`\n}\n\n",
 			wantErr:  false,
 		},
 		{

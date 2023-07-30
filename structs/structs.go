@@ -10,7 +10,12 @@ func CreateStructFromJSON(jsonData string, structName string, inline bool) (stri
 	// Parse JSON into a map[string]interface{}
 	var data map[string]interface{}
 	if err := json.Unmarshal([]byte(jsonData), &data); err != nil {
-		return "", err
+		innerData := make([]interface{}, 0)
+		if err = json.Unmarshal([]byte(jsonData), &innerData); err != nil {
+			return "", err
+		}
+		data = make(map[string]interface{})
+		data[getNameWithSuffix(structName, "Items")] = innerData
 	}
 
 	// Generate Go structs
