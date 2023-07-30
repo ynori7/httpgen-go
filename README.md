@@ -20,3 +20,9 @@ structs.CreateStructFromJSON(jsonString, "Request", true)
 ```
 
 The first parameter is the actual JSON to parse, the second is the name of the top-level structure, and the third is a flag indicating whether nested structs should be created inline or not.
+
+### Commands
+In `cmd`, you can find the following commands:
+
+**cmd/server**
+This command starts a simple HTTP server with a basic web UI for entering the cURL commands to parse and displaying the results. Just run `go run cmd/server/main.go` and then open http://localhost:8080
