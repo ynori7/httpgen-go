@@ -3,6 +3,7 @@ package structs
 import (
 	"encoding/json"
 	"go/format"
+	"strings"
 )
 
 // CreateStructFromJSON creates a Go struct from a JSON string
@@ -33,4 +34,8 @@ func CreateStructFromJSON(jsonData string, structName string, inline bool) (stri
 	}
 
 	return string(formattedCode), nil
+}
+
+func title(name string) string {
+	return strings.Replace(strings.Title(name), "-", "_", -1)
 }

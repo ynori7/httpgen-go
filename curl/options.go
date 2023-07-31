@@ -261,8 +261,8 @@ var hardcodedBooleans = map[string]bool{
 
 func GetBody(params map[string][]string) (string, bool) {
 	for k, v := range params {
-		if k == "-d" || k == "--data" || k == "--data-ascii" {
-			return strings.TrimSpace(v[0]), true
+		if k == "-d" || k == "--data" || k == "--data-raw" || k == "--data-ascii" {
+			return strings.Trim(strings.TrimSpace(v[0]), "'$"), true //trim $ and quotes for ansi escape
 		}
 	}
 

@@ -86,6 +86,7 @@ func getOutput(r *http.Request) (string, error) {
 		if json != "" {
 			data, err := structs.CreateStructFromJSON(json, "Payload", useInline)
 			if err != nil {
+				fmt.Println("Error creating structs: " + err.Error())
 				return "", err
 			}
 			return data, nil
@@ -93,17 +94,20 @@ func getOutput(r *http.Request) (string, error) {
 
 		command, err := curl.Parse(curlCommand)
 		if err != nil {
+			fmt.Println("Error parsing curl request: " + err.Error())
 			return "", err
 		}
 
 		resp, err := httpClient.Do(*command)
 		if err != nil {
+			fmt.Println("Error doing http request: " + err.Error())
 			return "", err
 		}
 
 		generator := generator.NewGoTemplate(command, resp)
 		goCode, err := generator.ExecuteGoTemplate(useInline)
 		if err != nil {
+			fmt.Println("Error generating template: " + err.Error())
 			return "", err
 		}
 

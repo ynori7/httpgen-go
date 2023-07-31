@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"reflect"
 	"sort"
-	"strings"
 )
 
 // Recursive function to create Go structs from JSON data
@@ -24,24 +23,33 @@ func createInlineStructFromJSON(data map[string]interface{}, structName string) 
 	sort.Strings(order)
 
 	for _, key := range order {
-		value := data[key]
+		originalKey := key
+		// Check if the key starts with a number
+		if len(key) > 0 && key[0] >= '0' && key[0] <= '9' {
+			key = structName + "Num_" + key // Prefix the key with a string
+		}
+		value := data[originalKey]
+		if reflect.TypeOf(value) == nil {
+			structCode += fmt.Sprintf("%s interface{} `json:\"%s\"`\n", title(key), originalKey)
+			continue
+		}
 		switch reflect.TypeOf(value).Kind() {
 		case reflect.Map:
-			structCode += fmt.Sprintf("%s %s `json:\"%s\"`\n", strings.Title(key), createInlineStructFromJSON(value.(map[string]interface{}), ""), key)
+			structCode += fmt.Sprintf("%s %s `json:\"%s\"`\n", title(key), createInlineStructFromJSON(value.(map[string]interface{}), ""), originalKey)
 		case reflect.Slice:
 			if len(value.([]interface{})) == 0 {
-				structCode += fmt.Sprintf("%s []interface{} `json:\"%s\"`\n", strings.Title(key), key)
+				structCode += fmt.Sprintf("%s []interface{} `json:\"%s\"`\n", title(key), originalKey)
 			} else {
 				t := reflect.TypeOf(value.([]interface{})[0])
 				switch t.Kind() {
 				case reflect.Map:
-					structCode += fmt.Sprintf("%s []%s `json:\"%s\"`\n", strings.Title(key), createInlineStructFromJSON(value.([]interface{})[0].(map[string]interface{}), ""), key)
+					structCode += fmt.Sprintf("%s []%s `json:\"%s\"`\n", title(key), createInlineStructFromJSON(value.([]interface{})[0].(map[string]interface{}), ""), originalKey)
 				default:
-					structCode += fmt.Sprintf("%s []%s `json:\"%s\"`\n", strings.Title(key), t.String(), key)
+					structCode += fmt.Sprintf("%s []%s `json:\"%s\"`\n", title(key), t.String(), originalKey)
 				}
 			}
 		default:
-			structCode += fmt.Sprintf("%s %s `json:\"%s\"`\n", strings.Title(key), reflect.TypeOf(value).String(), key)
+			structCode += fmt.Sprintf("%s %s `json:\"%s\"`\n", title(key), reflect.TypeOf(value).String(), originalKey)
 		}
 	}
 	if structName != "" {

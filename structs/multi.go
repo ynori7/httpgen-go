@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"reflect"
 	"sort"
-	"strings"
 )
 
 type structInfo struct {
@@ -50,10 +49,21 @@ func buildStructInfo(data map[string]interface{}, structName string, structs *st
 	typeDef := make([]string, 0)
 
 	for key, value := range data {
+		originalKey := key
+		// Check if the key starts with a number
+		if len(key) > 0 && key[0] >= '0' && key[0] <= '9' {
+			key = structName + "Num_" + key // Prefix the key with a string
+		}
+
+		if reflect.TypeOf(value) == nil {
+			line := fmt.Sprintf("%s interface{} `json:\"%s\"`", title(key), originalKey)
+			typeDef = append(typeDef, line)
+			continue
+		}
 		switch reflect.TypeOf(value).Kind() {
 		case reflect.Map:
-			name := buildStructInfo(value.(map[string]interface{}), strings.Title(key), structs, structName)
-			line := fmt.Sprintf("%s %s `json:\"%s\"`", strings.Title(key), name, key)
+			name := buildStructInfo(value.(map[string]interface{}), title(key), structs, structName)
+			line := fmt.Sprintf("%s %s `json:\"%s\"`", title(key), name, originalKey)
 			typeDef = append(typeDef, line)
 		case reflect.Slice:
 			t := ""
@@ -63,16 +73,16 @@ func buildStructInfo(data map[string]interface{}, structName string, structs *st
 				tRaw := reflect.TypeOf(value.([]interface{})[0])
 				switch tRaw.Kind() {
 				case reflect.Map:
-					name := buildStructInfo(value.([]interface{})[0].(map[string]interface{}), strings.Title(key), structs, structName)
+					name := buildStructInfo(value.([]interface{})[0].(map[string]interface{}), title(key), structs, structName)
 					t = "[]" + name
 				default:
 					t = fmt.Sprintf("[]%s", tRaw.String())
 				}
 			}
-			line := fmt.Sprintf("%s %s `json:\"%s\"`", strings.Title(key), t, key)
+			line := fmt.Sprintf("%s %s `json:\"%s\"`", title(key), t, originalKey)
 			typeDef = append(typeDef, line)
 		default:
-			line := fmt.Sprintf("%s %s `json:\"%s\"`", strings.Title(key), reflect.TypeOf(value).String(), key)
+			line := fmt.Sprintf("%s %s `json:\"%s\"`", title(key), reflect.TypeOf(value).String(), originalKey)
 			typeDef = append(typeDef, line)
 		}
 	}
@@ -83,18 +93,18 @@ func buildStructInfo(data map[string]interface{}, structName string, structs *st
 	})
 
 	// Check if the struct already exists
-	if _, ok := structs.types[strings.Title(structName)]; !ok {
+	if _, ok := structs.types[title(structName)]; !ok {
 		// TODO: Check if another struct already exists with a different name but the same fields. If so, try to find the commonality in the name
-		structs.types[strings.Title(structName)] = structDef{
-			name:   strings.Title(structName),
+		structs.types[title(structName)] = structDef{
+			name:   title(structName),
 			suffix: 0,
 			fields: typeDef,
 		}
-	} else if !reflect.DeepEqual(typeDef, structs.types[strings.Title(structName)].fields) {
+	} else if !reflect.DeepEqual(typeDef, structs.types[title(structName)].fields) {
 		// If the struct already exists, but the fields are different, create a new struct
 		i := 1
 		for {
-			newName := getNameWithSuffix(strings.Title(structName), i)
+			newName := getNameWithSuffix(title(structName), i)
 			// Check if the new struct already exists with this suffix
 			if _, ok := structs.types[newName]; !ok {
 				structs.types[newName] = structDef{

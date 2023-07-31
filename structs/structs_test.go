@@ -25,6 +25,11 @@ func TestCreateStructFromJSON_Inline(t *testing.T) {
 			wantErr:  false,
 		},
 		{
+			name:     "simple with null",
+			jsonData: "{\"name\":\"John\",\"address\":null}",
+			want:     "type Response struct { Address interface{} `json:\"address\"`\nName string `json:\"name\"`\n}\n",
+		},
+		{
 			name:     "simple array",
 			jsonData: "[\"San Francisco\",\"New York\"]",
 			want:     "type Response struct {\nResponseItems []string `json:\"ResponseItems\"`}\n",
@@ -65,6 +70,12 @@ func TestCreateStructFromJSON_Inline(t *testing.T) {
 			jsonData: "{aasdfesses\":[]}",
 			want:     "",
 			wantErr:  true,
+		},
+		{
+			name: "number as key",
+			jsonData: "{\"fields\":{\"1\":{\"city\":\"San Francisco\"},\"2\":{\"city\":\"New York\"}}}",
+			want: "type Response struct {\nFields struct {\nNum_1 struct {\nCity string `json:\"city\"`\n} `json:\"1\"`\nNum_2 struct {\nCity string `json:\"city\"`\n} `json:\"2\"`\n} `json:\"fields\"`\n}\n",
+			wantErr: false,
 		},
 	}
 
@@ -114,6 +125,12 @@ func TestCreateStructFromJSON_Multi(t *testing.T) {
 			wantErr:  false,
 		},
 		{
+			name:     "simple with null",
+			jsonData: "{\"name\":\"John\",\"address\":null}",
+			want:     "type Response struct { Address interface{} `json:\"address\"`\nName string `json:\"name\"`\n}\n\n",
+			wantErr:  false,
+		},
+		{
 			name:     "nested",
 			jsonData: "{\"name\":\"John\",\"address\":{\"city\":\"San Francisco\"}}",
 			want:     "type Response struct {\nAddress Address `json:\"address\"`\nName string `json:\"name\"`\n}\n\ntype Address struct {\nCity string `json:\"city\"`\n}\n\n",
@@ -148,6 +165,12 @@ func TestCreateStructFromJSON_Multi(t *testing.T) {
 			jsonData: "{aasdfesses\":[]}",
 			want:     "",
 			wantErr:  true,
+		},
+		{
+			name: "number as key",
+			jsonData: "{\"fields\":{\"1\":{\"city\":\"San Francisco\"},\"2\":{\"city\":\"New York\"}}}",
+			want: "type Response struct {\nFields Fields `json:\"fields\"`\n}\n\ntype Fields struct {\nFieldsNum_1 FieldsNum_1 `json:\"1\"`\nFieldsNum_2 FieldsNum_2 `json:\"2\"`\n}\n\ntype FieldsNum_1 struct {\nCity string `json:\"city\"`\n}\n\ntype FieldsNum_2 struct {\nCity string `json:\"city\"`\n}\n\n",
+			wantErr: false,
 		},
 	}
 
