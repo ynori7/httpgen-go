@@ -172,6 +172,12 @@ func TestCreateStructFromJSON_Multi(t *testing.T) {
 			want: "type Response struct {\nFields Fields `json:\"fields\"`\n}\n\ntype Fields struct {\nFieldsNum_1 FieldsNum_1 `json:\"1\"`\nFieldsNum_2 FieldsNum_2 `json:\"2\"`\n}\n\ntype FieldsNum_1 struct {\nCity string `json:\"city\"`\n}\n\ntype FieldsNum_2 struct {\nCity string `json:\"city\"`\n}\n\n",
 			wantErr: false,
 		},
+		{
+			name: "title has special characters",
+			jsonData: "{\"@type\":\"Person\",\"name\":\"John\"}",
+			want: "type Response struct {\nName string `json:\"name\"`\nType string `json:\"@type\"`\n}\n\n",
+			wantErr: false,
+		},
 	}
 
 	for _, tt := range tests {

@@ -3,6 +3,7 @@ package structs
 import (
 	"encoding/json"
 	"go/format"
+	"regexp"
 	"strings"
 )
 
@@ -36,6 +37,9 @@ func CreateStructFromJSON(jsonData string, structName string, inline bool) (stri
 	return string(formattedCode), nil
 }
 
+var titleExpr = regexp.MustCompile(`[^a-zA-Z0-9_]+`)
+
 func title(name string) string {
-	return strings.Replace(strings.Title(name), "-", "_", -1)
+	name = strings.Replace(strings.Title(name), "-", "_", -1)
+	return titleExpr.ReplaceAllString(name, "_") //replaces all non-alphanumeric characters with an underscore
 }
